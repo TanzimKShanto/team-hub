@@ -20,13 +20,12 @@ const useAuthStore = create((set, get) => ({
 
   login: async (email, password) => {
     const res = await api.post('/auth/login', { email, password })
-    set({ user: res.data.user })
+    set({ user: res.data.user, hydrated: true, loading: false })
     return res.data.user
   },
-
   register: async (name, email, password) => {
     const res = await api.post('/auth/register', { name, email, password })
-    set({ user: res.data.user })
+    set({ user: res.data.user, hydrated: true, loading: false })
     return res.data.user
   },
 
