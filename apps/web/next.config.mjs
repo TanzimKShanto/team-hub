@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
   output: 'standalone',
   images: {
     remotePatterns: [
@@ -10,7 +9,22 @@ const nextConfig = {
         pathname: '**'
       }
     ]
-  }
+  },
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'attractive-curiosity-production-e0ef.up.railway.app',
+          },
+        ],
+        destination: 'https://frontend.r-hub.xyz/:path*',
+        permanent: true,
+      },
+    ]
+  },
 };
 
 export default nextConfig;
