@@ -2,8 +2,8 @@
 
 A full-stack collaborative workspace platform that enables teams to manage shared goals, post announcements, track action items in real time, and collaborate across multiple workspaces.
 
-**Live demo:** [https://your-web.up.railway.app](https://your-web.up.railway.app)  
-**API:** [https://your-api.up.railway.app](https://your-api.up.railway.app)
+**Live demo:** [https://frontend.r-hub.xyz](https://frontend.r-hub.xyz)  
+**API:** [https://api.r-hub.xyz](https://api.r-hub.xyz)
 
 ---
 
@@ -326,4 +326,3 @@ The Admin user has full access to all features including workspace management, m
 ## License
 
 MIT License
-
