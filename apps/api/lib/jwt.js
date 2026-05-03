@@ -9,17 +9,23 @@ const generateRefreshToken = (userId) => {
 }
 
 const setTokenCookies = (res, accessToken, refreshToken) => {
+  const isProduction = process.env.NODE_ENV === 'production'
+
+  const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'none',
+    domain: isProduction ? '.r-hub.xyz' : undefined,
+  }
+
   res.cookie('access_token', accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none',
-    maxAge: 15 * 60 * 1000  // 15 min
+    ...cookieOptions,
+    maxAge: 15 * 60 * 1000
   })
+
   res.cookie('refresh_token', refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none',
-    maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
+    ...cookieOptions,
+    maxAge: 7 * 24 * 60 * 60 * 1000
   })
 }
 
