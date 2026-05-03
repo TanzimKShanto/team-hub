@@ -42,20 +42,19 @@ Collaborative Team Hub is a comprehensive team workspace application built for m
 - Add milestones to goals with progress tracking (0-100%)
 - Post progress updates with rich text content
 - Status tracking: Not Started, In Progress, Completed, At Risk
-- Filter goals by status in the goals dashboard
 
 ### Announcements
 
 - Rich text announcements with formatting support
 - Emoji reactions (like, love, celebrate, think, rocket) on posts
-- Comment thread on each announcement
+- Comment thread on each announcement and mention other team members
 - Pin important announcements to top of feed
 - Real-time updates when new announcements are posted
 
 ### Action Items
 
-- Kanban board view with columns: To Do, In Progress, In Review, Done
-- List view with sortable columns
+- Kanban board view with columns: To Do, In Progress,  Done
+- List view
 - Drag and drop to move items between columns
 - Link action items to specific goals
 - Assign to team members
@@ -238,7 +237,7 @@ node seed.js
 pnpm dev
 ```
 
-This starts both the frontend (http://localhost:3000) and backend API (http://localhost:4000) concurrently using Turborepo.
+This starts both the frontend (<http://localhost:3000>) and backend API (<http://localhost:4000>) concurrently using Turborepo.
 
 ---
 
@@ -327,3 +326,4 @@ The Admin user has full access to all features including workspace management, m
 ## License
 
 MIT License
+
