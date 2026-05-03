@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon index.js",
-    "build": "pnpm dlx prisma generate",
+    "build": "pnpm dlx prisma generate --schema=../../packages/db/prisma/schema.prisma",
     "start": "node index.js",
     "seed": "node seed.js"
   },
