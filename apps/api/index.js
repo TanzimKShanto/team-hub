@@ -15,23 +15,37 @@ const analyticsRoutes = require('./routes/analytics')
 const profileRoutes = require('./routes/profile')
 const notificationRoutes = require('./routes/notifications')
 
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:3000')
+  .split(',')
+  .map((o) => o.trim().replace(/\/+$/, ''))
+  .filter(Boolean)
+
+console.log('[CORS] Allowed origins:', allowedOrigins.join(', ') || '(none)')
+
+// Accept requests with no Origin (curl, server-to-server) and exact matches.
+const corsOrigin = (origin, callback) => {
+  if (!origin) return callback(null, true)
+  if (allowedOrigins.includes(origin.replace(/\/+$/, ''))) return callback(null, true)
+  console.warn(`[CORS] Rejected origin: ${origin}`)
+  return callback(null, false)
+}
+
+const corsOptions = {
+  origin: corsOrigin,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}
+
 const app = express()
 const server = http.createServer(app)
 
-const io = new Server(server, {
-  cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
-    credentials: true
-  }
-})
+const io = new Server(server, { cors: corsOptions })
 
 // make io available in routes via req.app.get('io')
 app.set('io', io)
 
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true
-}))
+app.use(cors(corsOptions))
 app.use(express.json())
 app.use(cookieParser())
 app.use((req, res, next) => {
