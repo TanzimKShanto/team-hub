@@ -13,7 +13,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json ./apps/api/
 COPY apps/web/package.json ./apps/web/
 COPY packages/db/package.json ./packages/db/
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --prod=false
 
 # ---------- Build (generate Prisma client) ----------
 FROM deps AS builder
