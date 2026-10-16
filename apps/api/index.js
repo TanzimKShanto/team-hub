@@ -15,9 +15,18 @@ const analyticsRoutes = require('./routes/analytics')
 const profileRoutes = require('./routes/profile')
 const notificationRoutes = require('./routes/notifications')
 
+// Tolerate CLIENT_URL values missing a scheme (e.g. "frontend.r-hub.xyz").
+const normalizeOrigin = (value) => {
+  const v = value.trim().replace(/\/+$/, '')
+  if (!v) return ''
+  if (/^https?:\/\//i.test(v)) return v
+  const isLocal = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/i.test(v)
+  return `${isLocal ? 'http' : 'https'}://${v}`
+}
+
 const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:3000')
   .split(',')
-  .map((o) => o.trim().replace(/\/+$/, ''))
+  .map(normalizeOrigin)
   .filter(Boolean)
 
 console.log('[CORS] Allowed origins:', allowedOrigins.join(', ') || '(none)')
