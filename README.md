@@ -301,9 +301,10 @@ cookies are same-site and use `SameSite=Lax` with `Domain=.r-hub.xyz`.
 - **Base Directory / Build Context:** `/` (repository root)
 - **Dockerfile Location:** `apps/api/Dockerfile`
 - **Ports Exposes:** `4000`
-- Set the environment variables (see below). On start, the container's
-  entrypoint runs `prisma migrate deploy` automatically (disable with
-  `RUN_MIGRATIONS=false`).
+- Set the environment variables (see below). On start, the container's entrypoint:
+  1. runs `prisma migrate deploy` (disable with `RUN_MIGRATIONS=false`), then
+  2. seeds demo data **only if the database is empty** (disable with
+     `RUN_SEED=false`).
 - Assign the domain `api.r-hub.xyz`.
 
 ### 3. Deploy the Web app
@@ -317,10 +318,11 @@ cookies are same-site and use `SameSite=Lax` with `Domain=.r-hub.xyz`.
   **Build Variables** (they are inlined at build time).
 - Assign the domain `frontend.r-hub.xyz`.
 
-### 4. Seed the database (one-off)
+### 4. Seed the database
 
-After the first successful deploy, run this once from the API container console
-(or any one-off command):
+The API seeds automatically on first boot when the database has no users, so no
+manual step is required. To force a **fresh re-seed** (this wipes and recreates
+all demo data), run once from the API container console:
 
 ```bash
 cd /app/apps/api && node seed.js

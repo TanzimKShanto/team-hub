@@ -10,5 +10,13 @@ if [ "${RUN_MIGRATIONS:-true}" = "true" ] && [ -n "$DATABASE_URL" ]; then
 fi
 
 cd /app/apps/api
+
+# Seed the demo data only when the database is empty (safe, non-destructive).
+# Disable by setting RUN_SEED=false.
+if [ "${RUN_SEED:-true}" = "true" ] && [ -n "$DATABASE_URL" ]; then
+  echo "[entrypoint] Checking seed state..."
+  node seed-if-empty.js
+fi
+
 echo "[entrypoint] Starting API..."
 exec node index.js
