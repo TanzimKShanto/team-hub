@@ -1,0 +1,28 @@
+# Dependencies
+**/node_modules
+
+# Build outputs
+**/.next
+**/dist
+**/build
+**/out
+**/.turbo
+
+# VCS
+.git
+.gitignore
+
+# Env files — never bake secrets into images
+**/.env
+**/.env.*
+!**/.env.example
+
+# Logs / local files
+**/*.log
+**/cookies.txt
+**/.DS_Store
+
+# Local tooling / docs
+opencode.json
+docker-compose*.yml
+**/railway.json

@@ -1,6 +1,9 @@
+import path from 'path'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  outputFileTracingRoot: path.join(import.meta.dirname, '../../'),
   images: {
     remotePatterns: [
       {
@@ -9,22 +12,7 @@ const nextConfig = {
         pathname: '**'
       }
     ]
-  },
-  async redirects() {
-    return [
-      {
-        source: '/:path*',
-        has: [
-          {
-            type: 'host',
-            value: 'attractive-curiosity-production-e0ef.up.railway.app',
-          },
-        ],
-        destination: 'https://frontend.r-hub.xyz/:path*',
-        permanent: true,
-      },
-    ]
-  },
+  }
 };
 
 export default nextConfig;

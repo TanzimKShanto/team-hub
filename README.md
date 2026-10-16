@@ -133,7 +133,7 @@ Backend middleware (`checkPermission.js`) validates every API request against th
 | **Authentication** | JWT (access + refresh tokens) |
 | **Real-Time** | Socket.io |
 | **File Storage** | Cloudinary |
-| **Deployment** | Railway |
+| **Deployment** | Coolify (Docker) |
 
 ---
 
@@ -183,8 +183,8 @@ team-hub/
 
 ### Prerequisites
 
-- Node.js 18+
-- pnpm 8+
+- Node.js 20.9+ (22 recommended)
+- pnpm 9+
 - PostgreSQL (local or cloud)
 
 ### Step 1: Clone the Repository
@@ -219,9 +219,7 @@ Edit both files with your actual values (see Environment Variables section below
 ### Step 4: Run Database Migrations
 
 ```bash
-cd packages/db
-pnpm dlx prisma migrate dev
-cd ../..
+pnpm db:migrate
 ```
 
 ### Step 5: Seed the Database
@@ -254,7 +252,9 @@ This starts both the frontend (<http://localhost:3000>) and backend API (<http:/
 | `CLOUDINARY_API_KEY` | Cloudinary API key | ✅ |
 | `CLOUDINARY_API_SECRET` | Cloudinary API secret | ✅ |
 | `CLIENT_URL` | Frontend URL for CORS (e.g., `http://localhost:3000`) | ✅ |
+| `COOKIE_DOMAIN` | Registrable domain for auth cookies in production (e.g., `.r-hub.xyz`) | Production only |
 | `NODE_ENV` | Environment mode (`development` or `production`) | Optional |
+| `PORT` | Port the API listens on (defaults to `4000`; platforms usually inject this) | Optional |
 
 ### Frontend (`apps/web/.env.local`)
 
@@ -263,39 +263,91 @@ This starts both the frontend (<http://localhost:3000>) and backend API (<http:/
 | `NEXT_PUBLIC_API_URL` | Backend API base URL (e.g., `http://localhost:4000/api`) | ✅ |
 | `NEXT_PUBLIC_SOCKET_URL` | Socket.io server URL (e.g., `http://localhost:4000`) | ✅ |
 
+> **Note:** `NEXT_PUBLIC_*` variables are inlined into the bundle at **build time**. When deploying with Docker, they must be provided as **build arguments**, not just runtime environment variables.
+
 ---
 
 ## Deployment
 
-### Railway Deployment
+The stack is deployed to **Coolify** using **Docker**. Because this is a pnpm
+workspace with a shared package, **both apps are built with the repository root
+as the Docker build context** and their own `Dockerfile`:
 
-1. **Create a Railway Project**
-   - Sign up at [railway.app](https://railway.app)
-   - Create a new project
+- `apps/api/Dockerfile` — builds the Express API and runs Prisma migrations on start
+- `apps/web/Dockerfile` — builds the Next.js standalone server
 
-2. **Provision PostgreSQL**
-   - In your Railway project, click "New" → "Database" → "PostgreSQL"
-   - Railway will automatically provision a PostgreSQL instance and provide the `DATABASE_URL`
+The layout is a single Coolify project with three resources:
 
-3. **Deploy Backend API**
-   - Click "New" → "GitHub Repo" or "Empty Service"
-   - Select your repository and the `apps/api` directory
-   - Set the build and start commands:
-     - Build: `pnpm install && pnpm --filter api build` (or just `node index.js` if not building)
-     - Start: `node index.js`
-   - Add all required environment variables in the Variables tab
+| Resource | Type | Public domain |
+|----------|------|---------------|
+| `postgres` | Coolify managed PostgreSQL | none (internal) |
+| `api` | Application (Dockerfile) | `api.r-hub.xyz` |
+| `web` | Application (Dockerfile) | `frontend.r-hub.xyz` |
 
-4. **Deploy Frontend**
-   - Click "New" → "GitHub Repo" or "Empty Service"
-   - Select your repository and the `apps/web` directory
-   - Set the build and start commands:
-     - Build: `pnpm install && pnpm --filter web build`
-     - Start: `pnpm --filter web start`
-   - Add all required environment variables, including the backend API URL (update to point to your Railway backend URL)
+Because the frontend and API share the registrable domain `r-hub.xyz`, auth
+cookies are same-site and use `SameSite=Lax` with `Domain=.r-hub.xyz`.
 
-5. **Update Client URL**
-   - In the backend service's variables, set `CLIENT_URL` to your frontend Railway URL
-   - In the frontend service's variables, update `NEXT_PUBLIC_API_URL` to point to your backend Railway URL
+### 1. Provision PostgreSQL
+
+- In your Coolify project: **New** → **Database** → **PostgreSQL**.
+- Coolify exposes an **internal** connection string. Use it as the API's
+  `DATABASE_URL`, e.g.
+  `postgres://postgres:<password>@<internal-host>:5432/postgres`.
+
+### 2. Deploy the API
+
+- **New** → **Application** → connect your Git repository.
+- **Build Pack:** `Dockerfile`
+- **Base Directory / Build Context:** `/` (repository root)
+- **Dockerfile Location:** `apps/api/Dockerfile`
+- **Ports Exposes:** `4000`
+- Set the environment variables (see below). On start, the container's
+  entrypoint runs `prisma migrate deploy` automatically (disable with
+  `RUN_MIGRATIONS=false`).
+- Assign the domain `api.r-hub.xyz`.
+
+### 3. Deploy the Web app
+
+- **New** → **Application** → connect the same Git repository.
+- **Build Pack:** `Dockerfile`
+- **Base Directory / Build Context:** `/` (repository root)
+- **Dockerfile Location:** `apps/web/Dockerfile`
+- **Ports Exposes:** `3000`
+- Add `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SOCKET_URL` and mark them as
+  **Build Variables** (they are inlined at build time).
+- Assign the domain `frontend.r-hub.xyz`.
+
+### 4. Seed the database (one-off)
+
+After the first successful deploy, run this once from the API container console
+(or any one-off command):
+
+```bash
+cd /app/apps/api && node seed.js
+```
+
+### Environment variables in Coolify
+
+**API service**
+
+```env
+DATABASE_URL=postgres://postgres:<password>@<internal-host>:5432/postgres
+JWT_ACCESS_SECRET=<secret>
+JWT_REFRESH_SECRET=<secret>
+CLOUDINARY_CLOUD_NAME=<cloud-name>
+CLOUDINARY_API_KEY=<api-key>
+CLOUDINARY_API_SECRET=<api-secret>
+CLIENT_URL=https://frontend.r-hub.xyz
+COOKIE_DOMAIN=.r-hub.xyz
+NODE_ENV=production
+```
+
+**Web service** (mark both as **Build Variables**)
+
+```env
+NEXT_PUBLIC_API_URL=https://api.r-hub.xyz/api
+NEXT_PUBLIC_SOCKET_URL=https://api.r-hub.xyz
+```
 
 ---
 

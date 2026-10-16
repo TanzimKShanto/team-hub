@@ -8,16 +8,20 @@ const generateRefreshToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' })
 }
 
+const isProduction = process.env.NODE_ENV === 'production'
+
+// Frontend and API share one registrable domain (e.g. frontend.r-hub.xyz and
+// api.r-hub.xyz), so cookies are same-site. `lax` is more reliable than `none`,
+// which browsers increasingly reject as third-party.
+const cookieOptions = {
+  httpOnly: true,
+  secure: isProduction,
+  sameSite: 'lax',
+  path: '/',
+  domain: isProduction ? (process.env.COOKIE_DOMAIN || '.r-hub.xyz') : undefined
+}
+
 const setTokenCookies = (res, accessToken, refreshToken) => {
-  const isProduction = process.env.NODE_ENV === 'production'
-
-  const cookieOptions = {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: 'none',
-    domain: isProduction ? '.r-hub.xyz' : undefined,
-  }
-
   res.cookie('access_token', accessToken, {
     ...cookieOptions,
     maxAge: 15 * 60 * 1000
@@ -30,8 +34,8 @@ const setTokenCookies = (res, accessToken, refreshToken) => {
 }
 
 const clearTokenCookies = (res) => {
-  res.clearCookie('access_token')
-  res.clearCookie('refresh_token')
+  res.clearCookie('access_token', cookieOptions)
+  res.clearCookie('refresh_token', cookieOptions)
 }
 
 module.exports = { generateAccessToken, generateRefreshToken, setTokenCookies, clearTokenCookies }
